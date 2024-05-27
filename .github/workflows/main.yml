@@ -7,7 +7,7 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [ macos-latest, windows-latest ]
+        os: [ macos-latest ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -32,7 +32,18 @@ jobs:
           echo "::set-output name=new_version::1.0"
         fi
 
-    - name: Attach README.md to Tag
-      run: |
-        git archive --format=zip --output=README.zip HEAD:README.md
-        git tag v${{ steps.increase_version.outputs.new_version }} -f -a -F README.zip
+        - name: Create and Attach README.zip
+          run: |
+            if [ -d temp_repo ]; then
+              rm -rf temp_repo
+            fi
+            git clone . temp_repo
+            cd temp_repo
+            git checkout $(git rev-list -n 1 v${{ steps.check_and_increase_version.outputs.new_version }})
+            git archive --format=zip --output=../README.zip HEAD README.md
+            cd ..
+            rm -rf temp_repo
+        
+        - name: Attach README.md to Tag
+          run: |
+            git tag v${{ steps.check_and_increase_version.outputs.new_version }} -f -a -m "Attach README.md" -F README.zip
