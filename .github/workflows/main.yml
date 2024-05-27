@@ -29,12 +29,8 @@ jobs:
 
     - name: Build executables
       run: |
-        if [ "${{ matrix.os }}" == "macos-latest" ]; then
-          npm run make -- --platform darwin
-        elif [ "${{ matrix.os }}" == "windows-latest" ]; then
-          npm run make -- --platform win32
-        fi
-
+        npm run make -- --platform darwin
+        
     - name: Check and Increase Tag Version
       id: check_and_increase_version
       run: |
