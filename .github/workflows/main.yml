@@ -46,4 +46,4 @@ jobs:
 
     - name: Attach README.md to Tag
       run: |
-        git tag v${{ env.new_version }} -f -a -m "Attach README.md" -F README.zip
+        git tag -f -a v${{ env.new_version }} -F README.zip
