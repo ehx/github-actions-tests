@@ -17,18 +17,21 @@ jobs:
     - name: Check and Increase Tag Version
       id: check_and_increase_version
       run: |
-        if git rev-parse --quiet --verify "refs/tags/v1.0.0"; then
-          current_version=$(git describe --abbrev=0 --tags)
-          IFS='.' read -r major minor patch <<< "$current_version"
+        latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+        echo "Latest tag: $latest_tag"
+        
+        if [ -z "$latest_tag" ]; then
+          echo "No existing tags found. Creating new tag v1.0.0"
+          new_version="1.0.0"
+          git tag -a v1.0.0 -m "Version 1.0.0"
+        else
+          echo "Existing tag found: $latest_tag"
+          IFS='.' read -r major minor patch <<< "${latest_tag#v}"
           ((patch++))
           new_version="$major.$minor.$patch"
-          echo "Current version: $current_version"
-          echo "New version will be: $new_version"
-        else
-          echo "Tag v1.0 does not exist. Creating new tag v1.0"
-          git tag -a v1.0 -m "Version 1.0"
-          new_version="1.0.0"
+          echo "New version will be: v$new_version"
         fi
+        
         echo "new_version=$new_version" >> $GITHUB_ENV
 
     - name: Attach README.md to Tag
