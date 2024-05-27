@@ -17,7 +17,7 @@ jobs:
     - name: Check and Increase Tag Version
       id: check_and_increase_version
       run: |
-        latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+        latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "")
         echo "Latest tag: $latest_tag"
         
         if [ -z "$latest_tag" ]; then
