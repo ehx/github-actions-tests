@@ -34,15 +34,7 @@ jobs:
 
     - name: Create and Attach README.zip
       run: |
-        if [ -d temp_repo ]; then
-          rm -rf temp_repo
-        fi
-        git clone . temp_repo
-        cd temp_repo
-        git checkout $(git rev-list -n 1 v${{ env.new_version }})
-        git archive --format=zip --output=../README.zip HEAD README.md
-        cd ..
-        rm -rf temp_repo
+        git archive --format=zip --output=README.zip HEAD:README.md
 
     - name: Attach README.md to Tag
       run: |
