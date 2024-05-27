@@ -14,39 +14,25 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Check if tag exists
-      id: check_tag
+    - name: Check and Increase Tag Version
+      id: check_and_increase_version
       run: |
         if git rev-parse --quiet --verify "refs/tags/v1.0"; then
           echo "::set-output name=exists::true"
           git describe --abbrev=0 --tags > current_version.txt
+          current_version=$(cat current_version.txt)
+          IFS='.' read -r major minor patch <<< "$current_version"
+          ((patch++))
+          new_version="$major.$minor.$patch"
+          echo "::set-output name=new_version::$new_version"
         else
           echo "::set-output name=exists::false"
+          echo "Creating new tag v1.0"
+          git tag -a v1.0 -m "Version 1.0"
+          echo "::set-output name=new_version::1.0"
         fi
-
-    - name: Increase tag version if necessary
-      if: steps.check_tag.outputs.exists == 'true'
-      id: increase_version
-      run: |
-        current_version=$(cat current_version.txt)
-        IFS='.' read -r major minor patch <<< "$current_version"
-        ((patch++))
-        new_version="$major.$minor.$patch"
-        echo "::set-output name=new_version::$new_version"
-
-    - name: Create Tag
-      if: steps.check_tag.outputs.exists == 'true'
-      run: |
-        echo "Creating new tag ${{ steps.increase_version.outputs.new_version }}"
-        git tag -a v${{ steps.increase_version.outputs.new_version }} -m "Version ${{ steps.increase_version.outputs.new_version }}"
-
-    - name: Create Tag if not exists
-      if: steps.check_tag.outputs.exists == 'false'
-      run: |
-        echo "Creating new tag v1.0"
-        git tag -a v1.0 -m "Version 1.0"
 
     - name: Attach README.md to Tag
       run: |
         git archive --format=zip --output=README.zip HEAD:README.md
-        git tag v${{ steps.increase_version.outputs.new_version }} -f -a -m "Attach README.md" -F README.zip
+        git tag v${{ steps.increase_version.outputs.new_version }} -f -a -F README.zip
