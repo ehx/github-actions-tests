@@ -17,7 +17,7 @@ jobs:
     - name: Check and Increase Tag Version
       id: check_and_increase_version
       run: |
-        if git rev-parse --quiet --verify "refs/tags/v1.0"; then
+        if git rev-parse --quiet --verify "refs/tags/v1.0.0"; then
           current_version=$(git describe --abbrev=0 --tags)
           IFS='.' read -r major minor patch <<< "$current_version"
           ((patch++))
