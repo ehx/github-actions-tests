@@ -1,0 +1,36 @@
+{
+  "name": "github-action-tests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "prettier": "prettier --write .",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "eslint --ext .ts,.tsx .",
+    "test": "jest --coverage --env=jsdom",
+    "jenkins": "jest --coverage --env=jsdom --coverageDirectory=output/coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ehx/github-actions-tests.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ehx/github-actions-tests/issues"
+  },
+  "homepage": "https://github.com/ehx/github-actions-tests#readme",
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.63",
+    "@electron-forge/maker-deb": "^6.0.0-beta.63",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.63",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
+    "@electron-forge/maker-zip": "^6.0.0-beta.63",
+    "@electron-forge/plugin-webpack": "^6.0.0-beta.63",
+    "electron": "^30.0.8"
+  }
+}
