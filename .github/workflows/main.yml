@@ -16,6 +16,25 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '16.1.0'
+
+    - name: Create output directory
+      run: mkdir -p out
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build executables
+      run: |
+        if [ "${{ matrix.os }}" == "macos-latest" ]; then
+          npm run make -- --platform darwin
+        elif [ "${{ matrix.os }}" == "windows-latest" ]; then
+          npm run make -- --platform win32
+        fi
+
     - name: Check and Increase Tag Version
       id: check_and_increase_version
       run: |
@@ -54,4 +73,12 @@ jobs:
         body: |
           Release for version v${{ env.new_version }}
         draft: false
-        files: file_in_tag.txt
+
+    - name: Upload executables
+      id: upload-release-assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./out/*
