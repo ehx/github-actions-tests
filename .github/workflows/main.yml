@@ -1,8 +1,4 @@
-name: Release Executables
-
 on:
-  workflow_dispatch:
-
 jobs:
   release:
     strategy:
@@ -18,32 +14,32 @@ jobs:
       id: check_and_increase_version
       run: |
         if git rev-parse --quiet --verify "refs/tags/v1.0"; then
-          echo "::set-output name=exists::true"
+          echo "exists=true" >> $GITHUB_ENV
           git describe --abbrev=0 --tags > current_version.txt
           current_version=$(cat current_version.txt)
           IFS='.' read -r major minor patch <<< "$current_version"
           ((patch++))
           new_version="$major.$minor.$patch"
-          echo "::set-output name=new_version::$new_version"
+          echo "new_version=$new_version" >> $GITHUB_ENV
         else
-          echo "::set-output name=exists::false"
+          echo "exists=false" >> $GITHUB_ENV
           echo "Creating new tag v1.0"
           git tag -a v1.0 -m "Version 1.0"
-          echo "::set-output name=new_version::1.0"
+          echo "new_version=1.0" >> $GITHUB_ENV
         fi
+      
+    - name: Create and Attach README.zip
+      run: |
+        if [ -d temp_repo ]; then
+          rm -rf temp_repo
+        fi
+        git clone . temp_repo
+        cd temp_repo
+        git checkout $(git rev-list -n 1 v${{ env.new_version }})
+        git archive --format=zip --output=../README.zip HEAD README.md
+        cd ..
+        rm -rf temp_repo
 
-        - name: Create and Attach README.zip
-          run: |
-            if [ -d temp_repo ]; then
-              rm -rf temp_repo
-            fi
-            git clone . temp_repo
-            cd temp_repo
-            git checkout $(git rev-list -n 1 v${{ steps.check_and_increase_version.outputs.new_version }})
-            git archive --format=zip --output=../README.zip HEAD README.md
-            cd ..
-            rm -rf temp_repo
-        
-        - name: Attach README.md to Tag
-          run: |
-            git tag v${{ steps.check_and_increase_version.outputs.new_version }} -f -a -m "Attach README.md" -F README.zip
+    - name: Attach README.md to Tag
+      run: |
+        git tag v${{ env.new_version }} -f -a -m "Attach README.md" -F README.zip
