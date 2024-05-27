@@ -1,4 +1,8 @@
+name: Release Executables
+
 on:
+  workflow_dispatch:
+
 jobs:
   release:
     strategy:
@@ -27,7 +31,7 @@ jobs:
           git tag -a v1.0 -m "Version 1.0"
           echo "new_version=1.0" >> $GITHUB_ENV
         fi
-      
+
     - name: Create and Attach README.zip
       run: |
         if [ -d temp_repo ]; then
