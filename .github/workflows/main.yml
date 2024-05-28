@@ -61,6 +61,11 @@ jobs:
         win_asset_name=$(echo "$win_found_file" | rev | cut -d '/' -f 1 | rev)
         echo "win_asset_name=$win_asset_name" >> $GITHUB_ENV
 
+    - name: Set up Git identity
+      run: |
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions"
+
     - name: Check and Increase Tag Version
       id: check_and_increase_version
       run: |
