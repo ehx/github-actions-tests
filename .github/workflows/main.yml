@@ -30,14 +30,6 @@ jobs:
     - name: Build executables
       run: npm run make -- --platform darwin
 
-    - name: List files in the output directory
-      id: list_files
-      run: |
-        echo "Files in out/ directory:"
-        ls out/
-        files=$(ls out/)
-        echo "files=$files" >> $GITHUB_ENV
-
     - name: Check and Increase Tag Version
       id: check_and_increase_version
       run: |
@@ -85,4 +77,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./out/*
+        asset_path: .out/make/zip/darwin/arm64/github-action-tests-darwin-arm64-1.0.0.zip
+        asset_name: github-action-tests-darwin-arm64-1.0.0.zip
+        asset_content_type: application/zip
