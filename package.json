@@ -21,7 +21,9 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "my_new_app"
+            "name": "my_new_app",
+            "authors": "test",
+            "description": "test desc"
           }
         },
         {
