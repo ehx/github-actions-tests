@@ -32,8 +32,13 @@ jobs:
 
     - name: Build executables
       run: |
-        npm run make -- --platform darwin
+      # npm run make -- --platform darwin
         npm run make -- --platform win32
+
+    - name: Show files in out directory
+      run: |
+        echo "$(find out -type f)"
+        exit 1
 
     - name: Check for files in out directory
       id: check_files
@@ -52,7 +57,7 @@ jobs:
 
         win_found_file=$(find ./out -type f -name "github-action-tests-win32-*")
         if [ -z "$win_found_file" ]; then
-          echo "No files found for mac in out directory. Exiting..."
+          echo "No files found for windows in out directory. Exiting..."
           exit 1
         fi
 
