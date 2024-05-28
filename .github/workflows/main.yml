@@ -5,11 +5,7 @@ on:
 
 jobs:
   release:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository with tags
@@ -27,43 +23,34 @@ jobs:
 
     - name: Build executables
       run: |
-        if [ ${{ matrix.os }} == 'macos-latest' ]; then
-          npm run make -- --platform darwin
-        elif [ ${{ matrix.os }} == 'windows-latest' ]; then
-          npm run make -- --platform win32
+        npm run make -- --platform darwin
+        npm run make -- --platform win32
+
+    - name: Check for files in out directory
+      id: check_files
+      run: |
+        mac_found_file=$(find ./out -type f -name "github-action-tests-darwin-*")
+        if [ -z "$mac_found_file" ]; then
+          echo "No files found for mac in out directory. Exiting..."
+          exit 1
+        fi
+        
+        echo "Mac file found at: $mac_found_file"
+        echo "mac_found_file=$mac_found_file" >> $GITHUB_ENV
+        mac_asset_name=$(echo "$mac_found_file" | rev | cut -d '/' -f 1 | rev)
+        echo "mac_asset_name=$mac_asset_name" >> $GITHUB_ENV
+
+
+        win_found_file=$(find ./out -type f -name "github-action-tests-win32-*")
+        if [ -z "$win_found_file" ]; then
+          echo "No files found for mac in out directory. Exiting..."
+          exit 1
         fi
 
-    - name: Check for files in out directory (Windows)
-      if: matrix.os == 'windows-latest'
-      id: check_files_windows
-      run: |
-        $found_file = Get-ChildItem -Path ./out -Recurse -File | Where-Object { $_.Name -like "github-action-tests-win32-*" }
-        if (-not $found_file) {
-          Write-Host "No files found in out directory. Exiting..."
-          exit 1
-        }
-        Write-Host "Files found in out directory:"
-        Write-Host $found_file
-        echo "found_file=$found_file" >> $env:GITHUB_ENV
-        $asset_name = Split-Path -Path $found_file -Leaf
-        echo "asset_name=$asset_name" >> $env:GITHUB_ENV
-
-    - name: Check for files in out directory (macOS)
-      if: matrix.os == 'macos-latest'
-      id: check_files_macos
-      run: |
-        found_file=$(find ./out -type f -name "github-action-tests-darwin-*")
-        if [ -z "$found_file" ]; then
-          echo "No files found in out directory. Exiting..."
-          exit 1
-        else
-          echo "Files found in out directory:"
-          echo "$found_file"
-          echo "found_file=$found_file" >> $GITHUB_ENV
-          asset_name=$(echo "$found_file" | rev | cut -d '/' -f 1 | rev)
-          echo "asset_name=$asset_name" >> $GITHUB_ENV
-        fi
-
+        echo "Win file found at: $win_found_file"
+        echo "win_found_file=$win_found_file" >> $GITHUB_ENV
+        win_asset_name=$(echo "$win_found_file" | rev | cut -d '/' -f 1 | rev)
+        echo "win_asset_name=$win_asset_name" >> $GITHUB_ENV
 
     - name: Check and Increase Tag Version
       id: check_and_increase_version
@@ -105,13 +92,24 @@ jobs:
           Release for version v${{ env.new_version }}
         draft: false
 
-    - name: Upload executables
-      id: upload-release-assets
+    - name: Upload executable (Macos)
+      if: ${{ env.mac_found_file }}
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.found_file }}
-        asset_name: ${{ env.asset_name }}
+        asset_path: ${{ env.mac_found_file }}
+        asset_name: ${{ env.mac_asset_name }}
+        asset_content_type: application/zip
+
+    - name: Upload executable (Windows)
+      if: ${{ env.win_found_file }}
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.win_found_file }}
+        asset_name: ${{ env.win_asset_name }}
         asset_content_type: application/zip
