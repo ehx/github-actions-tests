@@ -70,6 +70,12 @@ jobs:
           Release for version v${{ env.new_version }}
         draft: false
 
+    - name: Find file in out directory
+      run: |
+        found_file=$(find ./out -type f -name "github-action-tests-darwin-*")
+        echo "File found at: $found_file"
+        echo "found_file=$found_file" >> $GITHUB_ENV    
+
     - name: Upload executables
       id: upload-release-assets
       uses: actions/upload-release-asset@v1
@@ -77,6 +83,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: .out/make/zip/darwin/arm64/github-action-tests-darwin-arm64-1.0.0.zip
-        asset_name: github-action-tests-darwin-arm64-1.0.0.zip
+        asset_path: ${{ env.found_file }}
+        asset_name: $(basename ${{ env.found_file }})
         asset_content_type: application/zip
