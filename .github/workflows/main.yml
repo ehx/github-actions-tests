@@ -32,12 +32,8 @@ jobs:
 
     - name: Build executables
       run: |
+        npm run make -- --platform darwin
         npm run make -- --platform win32
-
-    - name: Show files in out directory
-      run: |
-        echo "$(find out -type f)"
-        exit 1
 
     - name: Check for files in out directory
       id: check_files
