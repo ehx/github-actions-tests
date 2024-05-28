@@ -6,6 +6,7 @@ on:
 jobs:
   release:
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
@@ -35,7 +36,7 @@ jobs:
     - name: Check for files in out directory
       id: check_files
       run: |
-        if [ ${{ matrix.os }} == 'windows-latest' ]; then
+        if [[ "${{ matrix.os }}" == 'windows-latest' ]]; then
           found_file=$(Get-ChildItem -Path ./out -Recurse -File | Where-Object { $_.Name -like "github-action-tests-win32-*" })
           if (-not $found_file) {
             Write-Host "No files found in out directory. Exiting..."
