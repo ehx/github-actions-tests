@@ -32,7 +32,6 @@ jobs:
 
     - name: Build executables
       run: |
-      # npm run make -- --platform darwin
         npm run make -- --platform win32
 
     - name: Show files in out directory
