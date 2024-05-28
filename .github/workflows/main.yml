@@ -7,7 +7,7 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [ macos-latest ]
+        os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -21,14 +21,45 @@ jobs:
       with:
         node-version: '16.1.0'
 
-    - name: Create output directory
-      run: mkdir -p out
-
     - name: Install dependencies
       run: npm install
 
     - name: Build executables
-      run: npm run make -- --platform darwin
+      run: |
+        if [ ${{ matrix.os }} == 'macos-latest' ]; then
+          npm run make -- --platform darwin
+        elif [ ${{ matrix.os }} == 'windows-latest' ]; then
+          npm run make -- --platform win32
+        fi
+
+    - name: Check for files in out directory
+      id: check_files
+      run: |
+        if [ ${{ matrix.os }} == 'windows-latest' ]; then
+          found_file=$(Get-ChildItem -Path ./out -Recurse -File | Where-Object { $_.Name -like "github-action-tests-win32-*" })
+          if (-not $found_file) {
+            Write-Host "No files found in out directory. Exiting..."
+            exit 1
+          }
+          Write-Host "Files found in out directory:"
+          Write-Host $found_file
+          echo "found_file=$found_file" >> $GITHUB_ENV
+          asset_name=$(Split-Path -Path $found_file -Leaf)
+          echo "asset_name=$asset_name" >> $GITHUB_ENV
+        else
+          found_file=$(find ./out -type f -name "github-action-tests-darwin-*")
+          if [ -z "$found_file" ]; then
+            echo "No files found in out directory. Exiting..."
+            exit 1
+          else
+            echo "Files found in out directory:"
+            echo "$found_file"
+            echo "found_file=$found_file" >> $GITHUB_ENV
+            asset_name=$(echo "$found_file" | rev | cut -d '/' -f 1 | rev)
+            echo "asset_name=$asset_name" >> $GITHUB_ENV
+          fi
+        fi
+
 
     - name: Check and Increase Tag Version
       id: check_and_increase_version
@@ -69,15 +100,6 @@ jobs:
         body: |
           Release for version v${{ env.new_version }}
         draft: false
-
-    - name: Find file in out directory
-      run: |
-        found_file=$(find ./out -type f -name "github-action-tests-darwin-*")
-        echo "File found at: $found_file"
-        echo "found_file=$found_file" >> $GITHUB_ENV 
-        asset_name=$(echo "$found_file" | rev | cut -d '/' -f 1 | rev)
-        echo "asset_name=$asset_name" >> $GITHUB_ENV 
-        echo "Uploading $asset_name"
 
     - name: Upload executables
       id: upload-release-assets
