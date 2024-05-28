@@ -30,6 +30,14 @@ jobs:
     - name: Build executables
       run: npm run make -- --platform darwin
 
+    - name: List files in the output directory
+      id: list_files
+      run: |
+        echo "Files in out/ directory:"
+        ls out/
+        files=$(ls out/)
+        echo "files=$files" >> $GITHUB_ENV
+
     - name: Check and Increase Tag Version
       id: check_and_increase_version
       run: |
