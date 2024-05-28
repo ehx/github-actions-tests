@@ -33,32 +33,35 @@ jobs:
           npm run make -- --platform win32
         fi
 
-    - name: Check for files in out directory
-      id: check_files
+    - name: Check for files in out directory (Windows)
+      if: matrix.os == 'windows-latest'
+      id: check_files_windows
       run: |
-        if [[ "${{ matrix.os }}" == 'windows-latest' ]]; then
-          found_file=$(Get-ChildItem -Path ./out -Recurse -File | Where-Object { $_.Name -like "github-action-tests-win32-*" })
-          if (-not $found_file) {
-            Write-Host "No files found in out directory. Exiting..."
-            exit 1
-          }
-          Write-Host "Files found in out directory:"
-          Write-Host $found_file
-          echo "found_file=$found_file" >> $GITHUB_ENV
-          asset_name=$(Split-Path -Path $found_file -Leaf)
-          echo "asset_name=$asset_name" >> $GITHUB_ENV
+        $found_file = Get-ChildItem -Path ./out -Recurse -File | Where-Object { $_.Name -like "github-action-tests-win32-*" }
+        if (-not $found_file) {
+          Write-Host "No files found in out directory. Exiting..."
+          exit 1
+        }
+        Write-Host "Files found in out directory:"
+        Write-Host $found_file
+        echo "found_file=$found_file" >> $env:GITHUB_ENV
+        $asset_name = Split-Path -Path $found_file -Leaf
+        echo "asset_name=$asset_name" >> $env:GITHUB_ENV
+
+    - name: Check for files in out directory (macOS)
+      if: matrix.os == 'macos-latest'
+      id: check_files_macos
+      run: |
+        found_file=$(find ./out -type f -name "github-action-tests-darwin-*")
+        if [ -z "$found_file" ]; then
+          echo "No files found in out directory. Exiting..."
+          exit 1
         else
-          found_file=$(find ./out -type f -name "github-action-tests-darwin-*")
-          if [ -z "$found_file" ]; then
-            echo "No files found in out directory. Exiting..."
-            exit 1
-          else
-            echo "Files found in out directory:"
-            echo "$found_file"
-            echo "found_file=$found_file" >> $GITHUB_ENV
-            asset_name=$(echo "$found_file" | rev | cut -d '/' -f 1 | rev)
-            echo "asset_name=$asset_name" >> $GITHUB_ENV
-          fi
+          echo "Files found in out directory:"
+          echo "$found_file"
+          echo "found_file=$found_file" >> $GITHUB_ENV
+          asset_name=$(echo "$found_file" | rev | cut -d '/' -f 1 | rev)
+          echo "asset_name=$asset_name" >> $GITHUB_ENV
         fi
 
 
