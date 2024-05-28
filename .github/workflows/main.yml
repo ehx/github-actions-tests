@@ -54,7 +54,7 @@ jobs:
         echo "mac_asset_name=$mac_asset_name" >> $GITHUB_ENV
 
 
-        win_found_file=$(find ./out -type f -name "github-action-tests-win32-*")
+        win_found_file=$(find ./out -type f -name "github-action-tests-*Setup.exe")
         if [ -z "$win_found_file" ]; then
           echo "No files found for windows in out directory. Exiting..."
           exit 1
