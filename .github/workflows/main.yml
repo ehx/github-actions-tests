@@ -43,8 +43,8 @@ jobs:
     - name: Check for files in out directory
       id: check_files
       run: |
-        repo_name=$(basename "${{ github.repository }}")
-        mac_found_file=$(find ./out -type f -name "${repo_name}-darwin-*")
+        app_name=$(jq -r '.name' package.json)
+        mac_found_file=$(find ./out -type f -name "${app_name}-darwin-*")
         if [ -z "$mac_found_file" ]; then
           echo "No files found for mac in out directory. Exiting..."
           exit 1
@@ -55,7 +55,7 @@ jobs:
         mac_asset_name=$(echo "$mac_found_file" | rev | cut -d '/' -f 1 | rev)
         echo "mac_asset_name=$mac_asset_name" >> $GITHUB_ENV
 
-        win_found_file=$(find ./out -type f -name "${repo_name}-*Setup.exe")
+        win_found_file=$(find ./out -type f -name "${app_name}-*Setup.exe")
         if [ -z "$win_found_file" ]; then
           echo "No files found for windows in out directory. Exiting..."
           exit 1
@@ -63,8 +63,8 @@ jobs:
 
         echo "Win file found at: $win_found_file"
         # Compress Windows executable
-        zip -r "${{ $win_found_file }}.zip" "${{ $win_found_file }}"
-        echo "win_found_file=$${{ $win_found_file }}.zip" >> $GITHUB_ENV
+        zip -r "${win_found_file}.zip" "${win_found_file}"
+        echo "win_found_file=${win_found_file}.zip" >> $GITHUB_ENV
         win_asset_name=$(echo "$win_found_file" | rev | cut -d '/' -f 1 | rev)
         echo "win_asset_name=$win_asset_name" >> $GITHUB_ENV
 
