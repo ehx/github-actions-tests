@@ -8,6 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Set up Git identity
+      run: |
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions"
+
     - name: Checkout repository with tags
       uses: actions/checkout@v4
       with:
@@ -61,13 +66,7 @@ jobs:
         win_asset_name=$(echo "$win_found_file" | rev | cut -d '/' -f 1 | rev)
         echo "win_asset_name=$win_asset_name" >> $GITHUB_ENV
 
-    - name: Set up Git identity
-      run: |
-        git config --global user.email "actions@github.com"
-        git config --global user.name "GitHub Actions"
-
     - name: Check and Increase Tag Version
-      id: check_and_increase_version
       run: |
         latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "")
         echo "Latest tag: $latest_tag"
@@ -86,13 +85,26 @@ jobs:
         
         echo "new_version=$new_version" >> $GITHUB_ENV
 
-    - name: Create and Push Tag
+    - name: Extract and bump version
       run: |
-        git tag -a v${{ env.new_version }} -m "Version ${{ env.new_version }}"
-        git push origin v${{ env.new_version }}
-        git archive --format=tar.gz --output=${{ env.new_version }}.tar.gz HEAD file_in_tag.txt
+        # Extract current version
+        CURRENT_VERSION=$(jq -r '.version' package.json)
+        echo "Current version: $CURRENT_VERSION"
+
+        # Increment the version (patch increment)
+        IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+        PATCH=$((PATCH + 1))
+        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        echo "New version: $NEW_VERSION"
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+    - name: Create and Push Tag
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION=${{ env.NEW_VERSION }}
+        git tag -a v$VERSION -m "Version $VERSION"
+        git push origin v$VERSION
 
     - name: Create Release
       uses: actions/create-release@v1
@@ -127,3 +139,14 @@ jobs:
         asset_path: ${{ env.win_found_file }}
         asset_name: ${{ env.win_asset_name }}
         asset_content_type: application/zip
+
+    - name: Bump app version in package.json
+      run: |
+        # Update package.json with the new version
+        jq --arg new_version "$NEW_VERSION" '.version = $new_version' package.json > package.tmp.json
+        mv package.tmp.json package.json
+    
+        # Commit the updated package.json
+        git add package.json
+        git commit -m "Bump version to $NEW_VERSION"
+        git push origin main
