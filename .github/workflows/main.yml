@@ -43,6 +43,7 @@ jobs:
     - name: Check for files in out directory
       id: check_files
       run: |
+        current_version=$(jq -r '.version' package.json)
         app_name=$(jq -r '.name' package.json)
         mac_found_file=$(find ./out -type f -name "${app_name}-darwin-*")
         if [ -z "$mac_found_file" ]; then
@@ -63,10 +64,9 @@ jobs:
 
         echo "Win file found at: $win_found_file"
         # Compress Windows executable
-        zip -r "${win_found_file}.zip" "${win_found_file}"
-        echo "win_found_file=${win_found_file}.zip" >> $GITHUB_ENV
-        win_asset_name=$(echo "$win_found_file" | rev | cut -d '/' -f 1 | rev)
-        echo "win_asset_name=$win_asset_name" >> $GITHUB_ENV
+        zip -r "${app_name}-windows-${current_version}.zip" "${win_found_file}"
+        echo "win_found_file=${app_name}-windows-${current_version}.zip" >> $GITHUB_ENV
+        echo "win_asset_name=${app_name}-windows-${current_version}.zip" >> $GITHUB_ENV
 
     - name: Check and Increase Tag Version
       run: |
